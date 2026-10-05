@@ -1,6 +1,6 @@
 {
     "name": "@spacexr/geodesy",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Renderer-neutral ellipsoid, geodetic, ECEF and local tangent frame primitives for SpaceXR.",
     "type": "module",
     "license": "Apache-2.0",

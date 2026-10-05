@@ -44,3 +44,16 @@ export interface ILocalTangentBasis {
     /** Unit vector normal to the ellipsoid and pointing up. */
     up: ICartesian3;
 }
+
+/**
+ * Mutable projected map coordinate.
+ *
+ * Eastings increase toward the east and northings toward the north. Both are
+ * expressed in metres and include any false easting or false northing.
+ */
+export interface IProjectedCoordinates {
+    /** Easting in metres. */
+    easting: number;
+    /** Northing in metres. */
+    northing: number;
+}

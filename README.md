@@ -120,6 +120,26 @@ NED is the local navigation convention commonly used in aviation and inertial na
 
 This model replaces the mutable ENU state and event dependency that existed in the original SpaceXR implementation. Applications can create a new local frame when their floating origin changes without mutating the planetary reference system.
 
+## Transverse Mercator and UTM
+
+`TransverseMercatorProjection` implements the ellipsoidal transverse Mercator projection with the sixth-order Kruger series described by Karney (2011). The error stays below one millimetre across a UTM zone. `UtmProjection` specializes it with the UTM scale factor of 0.9996, a false easting of 500,000 m and a southern false northing of 10,000,000 m.
+
+```ts
+import { Ellipsoid, GeodeticSystem, UtmProjection, utmZoneFromDegrees } from "@spacexr/geodesy";
+
+// NAD83 / UTM zone 18N (EPSG:26918) uses the GRS80 ellipsoid.
+const utm = new UtmProjection(18, "N", Ellipsoid.GRS80);
+
+const geodetic = utm.projectedToGeodeticDegrees(438705.189, 5830304.72, 254.085);
+const projected = utm.geodeticDegreesToProjected(geodetic.latitude, geodetic.longitude);
+
+const ecef = new GeodeticSystem(Ellipsoid.GRS80).geodeticDegreesToEcef(geodetic.latitude, geodetic.longitude, geodetic.height);
+
+const zone = utmZoneFromDegrees(52.6, -75.9); // 18
+```
+
+Pass the ellipsoid of the horizontal datum: WGS84 for WGS 84, GRS80 for NAD83, NAD83(CSRS) and ETRS89. The projection does not perform datum transformations, and the height argument is copied unchanged, so an orthometric elevation remains orthometric.
+
 ## Migration from SpaceXR Core
 
 The package preserves the useful concepts while making units and state explicit:

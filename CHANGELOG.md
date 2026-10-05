@@ -6,6 +6,14 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-05
+
+### Added
+
+- `TransverseMercatorProjection`, an ellipsoidal transverse Mercator projection using the sixth-order Kruger series, with forward and inverse conversions in degrees or radians.
+- `UtmProjection`, `utmCentralMeridianDegrees` and `utmZoneFromDegrees`, including the Norway and Svalbard zone exceptions.
+- `IProjectedCoordinates` for easting and northing values in metres.
+
 ## [0.1.0] - 2026-10-05
 
 ### Added
