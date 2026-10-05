@@ -27,7 +27,6 @@
     },
     "sideEffects": false,
     "files": [
-        "assets/brand",
         "dist",
         "src",
         "LICENSE",
@@ -52,7 +51,8 @@
             "types": "./dist/system.d.ts",
             "import": "./dist/system.js",
             "default": "./dist/system.js"
-        }
+        },
+        "./package.json": "./package.json"
     },
     "publishConfig": {
         "access": "public"

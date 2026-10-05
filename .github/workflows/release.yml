@@ -19,9 +19,26 @@ jobs:
           cache: npm
       - name: Upgrade npm for trusted publishing
         run: npm install -g npm@^11
+      - name: Verify that the tag matches the package version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version v${version}." >&2
+            exit 1
+          fi
       - run: npm ci
       - run: npm run check
       - run: npm publish --access public --provenance
+      - name: Dump npm debug logs on failure
+        if: failure()
+        run: |
+          npm --version
+          npm config list
+          for f in "$HOME"/.npm/_logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "----- $f -----"
+            cat "$f"
+          done
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true

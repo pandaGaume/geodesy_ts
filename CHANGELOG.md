@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-05
+
 ### Added
 
 - Initial `@spacexr/geodesy` package.
@@ -13,3 +15,4 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 - Geodetic, ECEF, ENU and NED coordinate conversions.
 - Canonical `ILocalTangentBasis` with symmetric ENU and NED transformation matrices.
 - JSDoc-compatible TSDoc API documentation and TypeDoc generation.
+- Continuous integration and npm trusted publishing release workflow with provenance.

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/brand/geodesy-logo.png" alt="SpaceXR Geodesy" width="900">
+  <img src="https://raw.githubusercontent.com/pandaGaume/geodesy_ts/main/assets/brand/geodesy-logo.png" alt="SpaceXR Geodesy" width="900">
 </p>
 
 # @spacexr/geodesy
@@ -179,16 +179,20 @@ The package can also be inspected before publishing:
 npm pack --dry-run
 ```
 
+## Release
+
+Publication is performed by the GitHub Actions `release` workflow with npm trusted publishing and provenance. See [RELEASING.md](https://github.com/pandaGaume/geodesy_ts/blob/main/RELEASING.md).
+
 ## Brand assets
 
 The pixel-art globe represents an oblate reference ellipsoid, its geodetic grid and a local tangent frame.
 
 <p align="center">
-  <img src="assets/brand/geodesy-icon.png" alt="SpaceXR Geodesy icon" width="220">
+  <img src="https://raw.githubusercontent.com/pandaGaume/geodesy_ts/main/assets/brand/geodesy-icon.png" alt="SpaceXR Geodesy icon" width="220">
 </p>
 
-- [Horizontal logo](assets/brand/geodesy-logo.png)
-- [Square icon](assets/brand/geodesy-icon.png)
+- [Horizontal logo](https://github.com/pandaGaume/geodesy_ts/blob/main/assets/brand/geodesy-logo.png)
+- [Square icon](https://github.com/pandaGaume/geodesy_ts/blob/main/assets/brand/geodesy-icon.png)
 
 ## License
 
