@@ -1,3 +1,7 @@
+[![npm](https://img.shields.io/npm/v/@spacexr/geodesy)](https://www.npmjs.com/package/@spacexr/geodesy)
+[![CI](https://github.com/pandaGaume/geodesy_ts/actions/workflows/ci.yml/badge.svg)](https://github.com/pandaGaume/geodesy_ts/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/pandaGaume/geodesy_ts/main/assets/brand/geodesy-logo.png" alt="SpaceXR Geodesy" width="900">
 </p>
