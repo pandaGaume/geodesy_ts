@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
 ### Added
 
 - `LambertConformalConicProjection`, the ellipsoidal Lambert conformal conic projection with one standard parallel and a scale factor (EPSG method 9801) or two standard parallels (EPSG method 9802), including southern cones.
