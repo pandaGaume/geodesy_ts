@@ -5,6 +5,8 @@ import type { ICartesian3, IGeodeticCoordinates, ILocalTangentBasis } from "./ty
 const POLE_EPSILON = 1e-12;
 const CONVERGENCE_EPSILON = 1e-14;
 const MAX_GEODETIC_ITERATIONS = 10;
+/** Height error, in metres, at which a point of a vertical line is found. */
+const HEIGHT_TOLERANCE = 1e-6;
 
 function cartesianTarget(target?: ICartesian3): ICartesian3 {
     return target ?? { x: 0, y: 0, z: 0 };
@@ -544,5 +546,64 @@ export class LocalTangentPlane {
      */
     public enuToGeodeticDegrees(position: ICartesian3, target?: IGeodeticCoordinates): IGeodeticCoordinates {
         return this.system.ecefToGeodeticDegrees(this.enuToEcef(position), target);
+    }
+
+    /**
+     * Finds the point at an ellipsoidal height on the vertical line of the origin through an east, north position.
+     *
+     * The line is parallel to the up axis of the origin, so the point keeps the
+     * given east and north: this is the inverse of projecting a geodetic
+     * position onto the tangent plane by dropping its up component, as a map
+     * draped by east and north does. Far from the origin the surface falls below
+     * the plane (about 38 km at 700 km on the Earth); the up coordinate is found
+     * by Newton iterations on the height.
+     *
+     * @param east - East coordinate in metres.
+     * @param north - North coordinate in metres.
+     * @param height - Ellipsoidal height of the point in metres. Defaults to 0.
+     * @param target - Optional mutable output object.
+     * @returns Geodetic latitude and longitude in radians, with the requested height.
+     * @throws RangeError When an input is not finite, or when the line does not reach that height (beyond a quarter
+     *     of the planet from the origin).
+     */
+    public enuPlaneToGeodeticRadians(east: number, north: number, height = 0, target?: IGeodeticCoordinates): IGeodeticCoordinates {
+        if (!Number.isFinite(east) || !Number.isFinite(north)) throw new RangeError("East and north must be finite.");
+        if (!Number.isFinite(height)) throw new RangeError("Ellipsoidal height must be finite.");
+        const result = geodeticTarget(target);
+        const position = { x: east, y: north, z: 0 };
+        const normal = { x: 0, y: 0, z: 0 };
+        // First guess: the fall of a sphere of the semi-major axis below the plane, shifted by the height difference.
+        const radius = this.system.ellipsoid.semiMajorAxis + height;
+        position.z = height - this.origin.height - (east * east + north * north) / (2 * radius);
+        for (let iteration = 0; iteration < MAX_GEODETIC_ITERATIONS * 2; iteration++) {
+            this.system.ecefToGeodeticRadians(this.enuToEcef(position), result);
+            const error = result.height - height;
+            if (Math.abs(error) <= HEIGHT_TOLERANCE) {
+                result.height = height;
+                return result;
+            }
+            // The height grows along the line by the cosine between the local normal and the up axis of the origin.
+            const slope = dot(this.system.geodeticSurfaceNormalRadians(result.latitude, result.longitude, normal), this.tangentBasis.up);
+            if (!(slope > POLE_EPSILON)) break;
+            position.z -= error / slope;
+        }
+        throw new RangeError("The vertical line of the origin does not reach this height at this east and north.");
+    }
+
+    /**
+     * Finds the point at an ellipsoidal height on the vertical line of the origin through an east, north position.
+     *
+     * @param east - East coordinate in metres.
+     * @param north - North coordinate in metres.
+     * @param height - Ellipsoidal height of the point in metres. Defaults to 0.
+     * @param target - Optional mutable output object.
+     * @returns Geodetic latitude and longitude in degrees, with the requested height.
+     * @see {@link LocalTangentPlane.enuPlaneToGeodeticRadians}
+     */
+    public enuPlaneToGeodeticDegrees(east: number, north: number, height = 0, target?: IGeodeticCoordinates): IGeodeticCoordinates {
+        const result = this.enuPlaneToGeodeticRadians(east, north, height, target);
+        result.latitude = toDegrees(result.latitude);
+        result.longitude = toDegrees(result.longitude);
+        return result;
     }
 }

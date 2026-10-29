@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-29
+
+### Added
+
+- `LocalTangentPlane.enuPlaneToGeodeticRadians` and `enuPlaneToGeodeticDegrees`: the point at an ellipsoidal height on the vertical line of the origin through an east, north position, the inverse of projecting onto the tangent plane by dropping the up component.
+
 ## [0.3.0] - 2026-10-29
 
 ### Added

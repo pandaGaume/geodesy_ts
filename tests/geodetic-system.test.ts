@@ -128,4 +128,43 @@ describe("LocalTangentPlane", () => {
         expect(geodetic.longitude).toBeCloseTo(2.353, 9);
         expect(geodetic.height).toBeCloseTo(70, 5);
     });
+
+    it("finds the point of the vertical line of the origin at a height, from a site to a country", () => {
+        const frame = GeodeticSystem.WGS84.createLocalTangentPlaneDegrees(52, -72, 300);
+        for (const distance of [0, 2000, 20000, 100000, 700000]) {
+            for (const bearing of [0, 1.1, 2.6, 4.4]) {
+                for (const height of [300, 0, 1500]) {
+                    const east = distance * Math.sin(bearing);
+                    const north = distance * Math.cos(bearing);
+                    const geodetic = frame.enuPlaneToGeodeticDegrees(east, north, height);
+                    expect(geodetic.height).toBe(height);
+                    // Projecting that point back onto the plane gives the same east and north.
+                    const local = frame.geodeticDegreesToEnu(geodetic.latitude, geodetic.longitude, height);
+                    expect(Math.abs(local.x - east)).toBeLessThan(1e-6);
+                    expect(Math.abs(local.y - north)).toBeLessThan(1e-6);
+                }
+            }
+        }
+        // The surface falls below the plane: about 38 km at 700 km.
+        const far = frame.enuPlaneToGeodeticDegrees(0, 700000, 300);
+        const fall = frame.geodeticDegreesToEnu(far.latitude, far.longitude, 300).z;
+        expect(fall).toBeLessThan(-38000);
+        expect(fall).toBeGreaterThan(-39000);
+    });
+
+    it("returns the vertical line point in radians into a caller-supplied target", () => {
+        const frame = GeodeticSystem.WGS84.createLocalTangentPlaneDegrees(45, 3, 0);
+        const target = { latitude: 0, longitude: 0, height: 0 };
+        expect(frame.enuPlaneToGeodeticRadians(1000, -2000, 50, target)).toBe(target);
+        const degrees = frame.enuPlaneToGeodeticDegrees(1000, -2000, 50);
+        expect(target.latitude).toBeCloseTo((degrees.latitude * Math.PI) / 180, 14);
+        expect(target.longitude).toBeCloseTo((degrees.longitude * Math.PI) / 180, 14);
+    });
+
+    it("refuses invalid inputs and points the vertical line of the origin cannot reach", () => {
+        const frame = GeodeticSystem.WGS84.createLocalTangentPlaneDegrees(45, 3, 0);
+        expect(() => frame.enuPlaneToGeodeticDegrees(Number.NaN, 0)).toThrow(RangeError);
+        expect(() => frame.enuPlaneToGeodeticDegrees(0, 0, Number.POSITIVE_INFINITY)).toThrow(RangeError);
+        expect(() => frame.enuPlaneToGeodeticDegrees(9000000, 0)).toThrow(RangeError);
+    });
 });

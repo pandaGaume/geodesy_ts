@@ -124,6 +124,12 @@ NED is the local navigation convention commonly used in aviation and inertial na
 
 This model replaces the mutable ENU state and event dependency that existed in the original SpaceXR implementation. Applications can create a new local frame when their floating origin changes without mutating the planetary reference system.
 
+A map draped on a curved terrain by its east and north is a projection onto the tangent plane along the up axis of the origin. `enuPlaneToGeodeticDegrees` and `enuPlaneToGeodeticRadians` invert it: they return the point at a given ellipsoidal height on the vertical line of the origin through an east, north position, so that a map pixel lands on the ground right under it, also far from the origin where the surface falls below the plane.
+
+```ts
+const pixel = localFrame.enuPlaneToGeodeticDegrees(250000, -120000, 35);
+```
+
 ## Transverse Mercator and UTM
 
 `TransverseMercatorProjection` implements the ellipsoidal transverse Mercator projection with the sixth-order Kruger series described by Karney (2011). The error stays below one millimetre across a UTM zone. `UtmProjection` specializes it with the UTM scale factor of 0.9996, a false easting of 500,000 m and a southern false northing of 10,000,000 m.
