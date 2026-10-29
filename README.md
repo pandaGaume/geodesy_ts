@@ -144,6 +144,36 @@ const zone = utmZoneFromDegrees(52.6, -75.9); // 18
 
 Pass the ellipsoid of the horizontal datum: WGS84 for WGS 84, GRS80 for NAD83, NAD83(CSRS) and ETRS89. The projection does not perform datum transformations, and the height argument is copied unchanged, so an orthometric elevation remains orthometric.
 
+A `latitudeOfOriginRadians` option counts northings from another parallel than the equator (EPSG method 9807), as national grids such as the British National Grid do.
+
+## Lambert conformal conic
+
+`LambertConformalConicProjection` implements the ellipsoidal Lambert conformal conic projection with the closed formulas of IOGP Guidance Note 7-2. Give one standard parallel and a scale factor (EPSG method 9801), or two standard parallels (EPSG method 9802). Southern cones are supported.
+
+```ts
+import { DEGREES_TO_RADIANS, Ellipsoid, LambertConformalConicProjection } from "@spacexr/geodesy";
+
+// NAD83 / Quebec Lambert (EPSG:32198).
+const quebec = new LambertConformalConicProjection({
+    ellipsoid: Ellipsoid.GRS80,
+    latitudeOfOriginRadians: 44 * DEGREES_TO_RADIANS,
+    centralMeridianRadians: -68.5 * DEGREES_TO_RADIANS,
+    standardParallel1Radians: 60 * DEGREES_TO_RADIANS,
+    standardParallel2Radians: 46 * DEGREES_TO_RADIANS,
+});
+
+const projected = quebec.geodeticDegreesToProjected(52.6, -75.9);
+const geodetic = quebec.projectedToGeodeticDegrees(projected.easting, projected.northing);
+```
+
+## Web Mercator
+
+`WebMercatorProjection` is EPSG:3857, the system of web map tiles: geodetic coordinates projected with the spherical Mercator formulas on a sphere of the WGS84 semi-major axis. It is not conformal on the ellipsoid and is not meant for survey data. `WEB_MERCATOR_MAX_LATITUDE_DEGREES` is the latitude at which the tiled map is square.
+
+## Choosing a projection at run time
+
+Every projection implements `IMapProjection`, so an application can resolve a coordinate reference system once, for example from an EPSG code or a `.prj` file, and convert through the interface without knowing the projection behind it.
+
 ## Migration from SpaceXR Core
 
 The package preserves the useful concepts while making units and state explicit:

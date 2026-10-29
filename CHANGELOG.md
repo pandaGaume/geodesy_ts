@@ -6,6 +6,13 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Added
+
+- `LambertConformalConicProjection`, the ellipsoidal Lambert conformal conic projection with one standard parallel and a scale factor (EPSG method 9801) or two standard parallels (EPSG method 9802), including southern cones.
+- `WebMercatorProjection` (EPSG:3857), with `WEB_MERCATOR_RADIUS` and `WEB_MERCATOR_MAX_LATITUDE_DEGREES`.
+- `IMapProjection`, implemented by every projection, to convert through a projection chosen at run time.
+- `latitudeOfOriginRadians` option of `TransverseMercatorProjection`, counting northings from a parallel other than the equator (EPSG method 9807).
+
 ## [0.2.0] - 2026-10-05
 
 ### Added

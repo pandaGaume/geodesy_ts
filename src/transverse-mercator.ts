@@ -1,6 +1,6 @@
 import { DEGREES_TO_RADIANS, RADIANS_TO_DEGREES, normalizeLongitudeRadians } from "./angles";
 import { Ellipsoid } from "./ellipsoid";
-import type { IGeodeticCoordinates, IProjectedCoordinates } from "./types";
+import type { IGeodeticCoordinates, IMapProjection, IProjectedCoordinates } from "./types";
 
 /** Convergence threshold of the inverse conformal latitude iteration, applied to the latitude tangent. */
 const TAU_TOLERANCE = 1e-12;
@@ -15,6 +15,8 @@ export interface ITransverseMercatorOptions {
     ellipsoid?: Ellipsoid;
     /** Longitude of the central meridian in radians east of the reference meridian. */
     centralMeridianRadians: number;
+    /** Geodetic latitude of the natural origin in radians, where the northing equals the false northing. Defaults to 0 (the equator). */
+    latitudeOfOriginRadians?: number;
     /** Scale factor on the central meridian. Defaults to 1. */
     scaleFactor?: number;
     /** Value added to every easting, in metres. Defaults to 0. */
@@ -43,14 +45,17 @@ function conformalTangent(tau: number, eccentricity: number): number {
  * zone with a wide margin.
  *
  * Eastings increase toward the east and northings toward the north, both in
- * metres. Geodetic coordinates use geodetic latitude and longitude east of the
- * reference meridian.
+ * metres. Northings count from the latitude of origin, the equator unless the
+ * options name another one (EPSG method 9807). Geodetic coordinates use
+ * geodetic latitude and longitude east of the reference meridian.
  */
-export class TransverseMercatorProjection {
+export class TransverseMercatorProjection implements IMapProjection {
     /** Reference ellipsoid of the projection. */
     public readonly ellipsoid: Ellipsoid;
     /** Longitude of the central meridian in radians. */
     public readonly centralMeridianRadians: number;
+    /** Geodetic latitude of the natural origin in radians. */
+    public readonly latitudeOfOriginRadians: number;
     /** Scale factor on the central meridian. */
     public readonly scaleFactor: number;
     /** False easting in metres. */
@@ -63,20 +68,26 @@ export class TransverseMercatorProjection {
     private readonly scaledRectifyingRadius: number;
     private readonly alpha: readonly number[];
     private readonly beta: readonly number[];
+    /** Scaled meridian arc from the equator to the latitude of origin, in metres, removed from every northing. */
+    private readonly originNorthing: number;
 
     /**
      * Creates a transverse Mercator projection.
      *
      * @param options - Projection parameters.
-     * @throws RangeError When a parameter is not finite or the scale factor is not positive.
+     * @throws RangeError When a parameter is not finite, the latitude of origin is out of range or the scale factor is not positive.
      */
     public constructor(options: ITransverseMercatorOptions) {
         this.ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
         this.centralMeridianRadians = options.centralMeridianRadians;
+        this.latitudeOfOriginRadians = options.latitudeOfOriginRadians ?? 0;
         this.scaleFactor = options.scaleFactor ?? 1;
         this.falseEasting = options.falseEasting ?? 0;
         this.falseNorthing = options.falseNorthing ?? 0;
         validateFinite(this.centralMeridianRadians, "Central meridian");
+        validateFinite(this.latitudeOfOriginRadians, "Latitude of origin");
+        if (Math.abs(this.latitudeOfOriginRadians) > Math.PI / 2)
+            throw new RangeError("Latitude of origin must be within [-PI/2, PI/2] radians.");
         validateFinite(this.falseEasting, "False easting");
         validateFinite(this.falseNorthing, "False northing");
         if (!Number.isFinite(this.scaleFactor) || this.scaleFactor <= 0)
@@ -110,6 +121,16 @@ export class TransverseMercatorProjection {
             (4583 / 161280) * n5 - (108847 / 3991680) * n6,
             (20648693 / 638668800) * n6,
         ];
+        this.originNorthing = this.scaledMeridianArc(this.latitudeOfOriginRadians);
+    }
+
+    /** Distance along the central meridian from the equator to a latitude, multiplied by the central scale factor, in metres. */
+    private scaledMeridianArc(latitudeRadians: number): number {
+        if (latitudeRadians === 0) return 0;
+        const xiPrime = Math.atan(conformalTangent(Math.tan(latitudeRadians), this.eccentricity));
+        let xi = xiPrime;
+        for (let j = 1; j <= 6; j++) xi += this.alpha[j - 1]! * Math.sin(2 * j * xiPrime);
+        return this.scaledRectifyingRadius * xi;
     }
 
     /**
@@ -148,7 +169,7 @@ export class TransverseMercatorProjection {
         }
 
         target.easting = this.falseEasting + this.scaledRectifyingRadius * eta;
-        target.northing = this.falseNorthing + this.scaledRectifyingRadius * xi;
+        target.northing = this.falseNorthing + this.scaledRectifyingRadius * xi - this.originNorthing;
         return target;
     }
 
@@ -189,7 +210,7 @@ export class TransverseMercatorProjection {
         validateFinite(height, "Height");
 
         const eta = (easting - this.falseEasting) / this.scaledRectifyingRadius;
-        const xi = (northing - this.falseNorthing) / this.scaledRectifyingRadius;
+        const xi = (northing - this.falseNorthing + this.originNorthing) / this.scaledRectifyingRadius;
 
         let xiPrime = xi;
         let etaPrime = eta;

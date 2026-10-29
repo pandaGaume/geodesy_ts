@@ -100,6 +100,50 @@ describe("TransverseMercatorProjection", () => {
         expect(geodetic.longitude).toBeLessThan(-75.8);
     });
 
+    it("matches the EPSG example with a latitude of origin (OSGB 1936 / British National Grid)", () => {
+        const airy = Ellipsoid.fromSemiMajorAxisAndInverseFlattening("Airy1830", 6377563.396, 299.3249646);
+        const projection = new TransverseMercatorProjection({
+            ellipsoid: airy,
+            latitudeOfOriginRadians: 49 * DEGREES_TO_RADIANS,
+            centralMeridianRadians: -2 * DEGREES_TO_RADIANS,
+            scaleFactor: 0.9996012717,
+            falseEasting: 400000,
+            falseNorthing: -100000,
+        });
+        const projected = projection.geodeticDegreesToProjected(50.5, 0.5);
+        expect(Math.abs(projected.easting - 577274.99)).toBeLessThan(0.01);
+        expect(Math.abs(projected.northing - 69740.5)).toBeLessThan(0.01);
+        const geodetic = projection.projectedToGeodeticDegrees(projected.easting, projected.northing);
+        expect(geodetic.latitude).toBeCloseTo(50.5, 11);
+        expect(geodetic.longitude).toBeCloseTo(0.5, 11);
+        const origin = projection.geodeticDegreesToProjected(49, -2);
+        expect(origin.easting).toBeCloseTo(400000, 6);
+        expect(origin.northing).toBeCloseTo(-100000, 6);
+    });
+
+    it("counts northings from the latitude of origin", () => {
+        const equator = new TransverseMercatorProjection({
+            ellipsoid: Ellipsoid.GRS80,
+            centralMeridianRadians: -73.5 * DEGREES_TO_RADIANS,
+        });
+        const shifted = new TransverseMercatorProjection({
+            ellipsoid: Ellipsoid.GRS80,
+            centralMeridianRadians: -73.5 * DEGREES_TO_RADIANS,
+            latitudeOfOriginRadians: 45 * DEGREES_TO_RADIANS,
+        });
+        const arc = equator.geodeticDegreesToProjected(45, -73.5).northing;
+        for (const [latitude, longitude] of [
+            [45, -73.5],
+            [47.2, -75],
+            [52.6, -71.9],
+        ] as const) {
+            expect(shifted.geodeticDegreesToProjected(latitude, longitude).northing).toBeCloseTo(
+                equator.geodeticDegreesToProjected(latitude, longitude).northing - arc,
+                6,
+            );
+        }
+    });
+
     it("reuses caller-supplied targets", () => {
         const utm = new UtmProjection(18, "N");
         const projected = { easting: 0, northing: 0 };
@@ -113,6 +157,7 @@ describe("TransverseMercatorProjection", () => {
         expect(() => new UtmProjection(61, "N")).toThrow(RangeError);
         expect(() => new UtmProjection(18, "X" as "N")).toThrow(RangeError);
         expect(() => new TransverseMercatorProjection({ centralMeridianRadians: 0, scaleFactor: 0 })).toThrow(RangeError);
+        expect(() => new TransverseMercatorProjection({ centralMeridianRadians: 0, latitudeOfOriginRadians: 2 })).toThrow(RangeError);
         expect(() => new UtmProjection(18, "N").geodeticDegreesToProjected(91, 0)).toThrow(RangeError);
         expect(() => new UtmProjection(18, "N").projectedToGeodeticDegrees(Number.NaN, 0)).toThrow(RangeError);
     });
