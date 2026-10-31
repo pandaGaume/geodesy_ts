@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Added
+
+- `epsgSystem(code)`, a registry of coordinate reference systems by EPSG code, on the WGS84 and GRS80 ellipsoids: geographic WGS 84, NAD83, NAD83(CSRS), RGF93, ETRS89 and SWEREF99; Web Mercator; UTM on WGS 84, NAD83 and ETRS89; NAD83 MTM zones and Quebec Lambert; Lambert-93; SWEREF99 TM and its local zones; ETRS-TM35FIN. `IEpsgSystem`, `IEpsgGeographicSystem` and `IEpsgProjectedSystem` describe its entries.
+
 ## [0.3.1] - 2026-10-29
 
 ### Added

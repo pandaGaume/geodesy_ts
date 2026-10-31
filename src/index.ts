@@ -1,5 +1,6 @@
 export * from "./angles";
 export * from "./ellipsoid";
+export * from "./epsg";
 export * from "./geodetic-system";
 export * from "./lambert-conformal-conic";
 export * from "./transverse-mercator";
